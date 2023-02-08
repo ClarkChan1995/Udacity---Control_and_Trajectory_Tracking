@@ -203,9 +203,175 @@ double angle_correction(double angle){
   return angle;
 }
 
+#define ALMOST_ZERO 0.000001
+#define FULL_STOP -0.5
+
+class Vector2D{
+  public:
+  double x, y;
+
+  Vector2D(double x, double y){
+    this->x = x;
+    this->y = y;
+  }
+
+  Vector2D *sum(Vector2D *v){
+    return new Vector2D(this->x + v->x, this->y + v->y);
+  }
+
+  Vector2D *subtract(Vector2D *v){
+    return new Vector2D(this->x - v->x, this->y - v->y);
+  }
+
+  Vector2D *multiple(double a){
+    return new Vector2D(this->x * a, this->y * a);
+  }
+
+  double dot_product(Vector2D *v){
+    return this->x * v->x + this->y * v->y;
+  }
+
+  double magnitude(){
+    return sqrt(this->x * this->x + this->y * this->y);
+  }
+
+  double angle(){
+    return atan2(this->y, this->x);
+  }
+
+  double distance(Vector2D *v){
+    return v->subtract(thus)->magnitude();
+  }
+
+  Vector2D *unitary(){
+    double m = magnitude();
+    if(abs(m) < ALMOST_ZERO) return new Vector2D(0, 0);
+    return new Vector2D(this->x / m, this->y / m);
+  }
+};
+
+Vector2D *polar_to_vector(double magnitude, double angle){
+  return new Vector2D(magnitude * cos(angle), magnitude * sin(angle));
+}
+
+double min(double m1, double m2){
+  return m1 < m2 ? m1 : m2;
+}
+
+struct Recommend{
+  double steering, speed;
+}
+
+class WayPoints{
+  public:
+
+  int n_points, all_waypoints_stopped, any_waypoints_stopped;
+  Vector2D *location, *central_point, *last_point, *i, *j, *projection;
+  Vector<Vector2D *> points;
+
+  double avg_speed;
+
+  WayPoints(vector<double> x_points, vector<double> y_points, vector<double> v_points){
+    n_points = x_points.size();
+    double x_avg = 0, y_avg = 0;
+
+    avg_speed = 0;
+    all_waypoints_stopped = 1;
+    any_waypoints_stopped = 0;
+
+    for(int i = 0; i < n_points; i++){
+      points.push_back(new Vector2D(x_points[i], y_points[i]));
+
+      x_avg += x_points[i];
+      y_avg += y_points[i];
+      avg_speed += v_points[i];
+
+      if(abs(v_points[i]) < ALMOST_ZERO){
+        all_waypoints_stopped = 0;
+        any_waypoints_stopped =1;
+      }
+    }
+    x_avg /= n_points;
+    y_avg /= n_points;
+    avg_speed /= n_points;
+    central_point = new Vector2D(x_avg, y_avg);
+    last_point = points[n_points - 1];
+    v_points = v_points;
+  }
+
+  ~WayPoints(){
+    delete(location);
+    delete(central_point);
+    delete(last_point);
+  }
+
+  double compute_steering_compensation(){
+    double max_angle = M_PI * 0.25;
+    double angle_compensation = -projection->y * 0.5;
+    if (angle_compensation > max_angle) angle_compensation = max_angle;
+    if (angle_compensation < -max_angle) angle_compensation = -max_angle;
+    return angle_compensation;
+  }
+
+  double compute_speed_compensation(){
+    double max_speed = 1.5;
+    double offset = 0;
+    double speed_compensation = -(projection->x - offset);
+    if (speed_compensation > max_speed) speed_compensation = max_speed;
+    if (speed_compensation < -max_speed) speed_compensation = -max_speed;
+    return speed_compensation;
+  }
+
+  double regulate_initial_speed(double goal_speed, double current_speed){
+    double diff_speed = goal_speed - current_speed;
+    double max_diff = 0.75;
+    if(diff_speed > max_diff) diff_speed = max_diff;
+    if(diff_speed < -max_diff) diff_speed = -max_diff;
+    return goal_speed;
+  }
+
+  Recommend recommend_to_stop(double current_angle, double current_speed){
+    return Recommend{
+      angle_correction(current_angle),
+      FULL_STOP
+    };
+  }
+
+  Recommend recommend_compute(Vector2D *location, double current_angle, double current_speed, int n_spirals){
+    this->location = location;
+    if(abs(avg_speed) < ALMOST_ZERO || n_spirals == 0){
+      return recommend_to_stop(current_angle, current_speed);
+    }
+    else{
+      Vector2D *direction = last_point->subtract(central_point);
+      i = direction->unitary();
+      j = new Vector2D(-i->y, i->x);
+
+      Vector2D *d = location->subtract(central_point);
+      projection = new Vector2D(d->dot_product(i), d->dot_product(j));
+
+      double steering = angle_correction(direction->angle());
+      double steering_compensation = angle_correction(compute_steering_compensation());
+      double speed = min(avg_speed, 3);
+      double speed_compensation = compute_speed_compensation();
+
+      if(projection->x > direction->magnitude()) return recommend_to_stop(current_angle, current_speed);
+
+      return Recommend{
+        angle_correction(steering + steering_compensation),
+        regulate_initial_speed(speed + speed_compensation, current_speed)
+      };
+    }
+  }
+};
+
 
 int main ()
 {
+  unsigned int seed = 1995;
+  std::srand(seed);
+  srand(seed);
+
   cout << "starting server" << endl;
   uWS::Hub h;
 
@@ -229,7 +395,7 @@ int main ()
   **/
   PID pid_steer = PID();
   double max_steer = 1.2;    //original value, may vary based on result
-  pid_steer.Init(0.25, 0.1, 0.5, max_steer , -max_steer, 10);    //original value setup
+  pid_steer.Init(0.25, 0.1, 0.5, max_steer , -max_steer);    //original value setup
 
   // initialize pid throttle
   /**
@@ -238,7 +404,7 @@ int main ()
   PID pid_throttle = PID();
   double max_throttle = 1;
   double max_break = -1;
-  pid_throttle.Init(0.25, 0.05, 0.1, max_throttle, max_break, 10);      //original value setup;
+  pid_throttle.Init(0.25, 0.05, 0.1, max_throttle, max_break);      //original value setup;
 
 
   h.onMessage([&pid_steer, &pid_throttle, &new_delta_time, &timer, &prev_timer, &i, &prev_timer](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode)
@@ -309,28 +475,28 @@ int main ()
 
 
           double steer_output;
-          double dis_min = 10000;
-          int close_id = 0;
+          //double dis_min = 10000;
+          //int close_id = 0;
+          error_steer = 0;
 
+          Vector2D *location = new Vector2D(x_position, y_position);
+          WayPoints way_points = WayPoints(x_points, y_points, v_points);
+
+          double current_steering = angle_correction(yaw);
+          int n_spirals = spirals_x.size();
+
+          Recommend recommendation = way_points.recommend_compute(location, current_steering, velocity, n_spirals);
+
+          double desired_steering = recommendation.steering;
+          double desired_speed = recommendation.speed;
+
+          error_steer = angle_correction(desired_steering - current_steering);
           /**
           * TODO (step 3): compute the steer error (error_steer) from the position and the desired trajectory
           **/
-          for (int i = 0; i < x_points.size(); ++i)
-          {
-            double action_distance = pow((x_position - x_points[i]), 2) + pow((y_position - y_points[i]), 2);
-            if(action_distance < dis_min){
-              dis_min = action_distance;
-              close_id = i;
-            }
-          }
-          error_steer = angle_between_points(x_position, y_position, x_points[close_id], y_points[close_id]) - yaw;
-
-          /**
-          * TODO (step 3): uncomment these lines
-          **/
-//           // Compute control to apply
           pid_steer.UpdateError(error_steer);
           steer_output = pid_steer.TotalError();
+          file_steer.seekg(std::ios::beg);
 
 //           // Save data
           file_steer.seekg(std::ios::beg);
@@ -359,7 +525,7 @@ int main ()
           **/
           // modify the following line for step 2
           error_throttle = 0;
-          error_throttle = v_points[close_id] - velocity;
+          error_throttle = desired_speed - velocity;
 
           double throttle_output;
           double brake_output;

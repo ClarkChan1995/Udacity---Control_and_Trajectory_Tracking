@@ -15,15 +15,15 @@ PID::PID() {}
 
 PID::~PID() {}
 
-void PID::Init(double Kpi, double Kii, double Kdi, double output_lim_maxi, double output_lim_mini) {
+void PID::Init(double Kp, double Ki, double Kd, double output_lim_max, double output_lim_min) {
    /**
    * TODO: Initialize PID coefficients (and errors, if needed)
    **/
-   this->Kpi = Kpi;
-   this->Kii = Kii;
-   this->Kdi = Kdi;
-   this->output_lim_maxi = output_lim_maxi;
-   this->output_lim_mini = output_lim_mini;
+   this->Kp = Kp;
+   this->Ki = Ki;
+   this->Kd = Kd;
+   this->output_lim_max = output_lim_max;
+   this->output_lim_min = output_lim_min;
    cte0 = 0;
    I = 0;
 }
@@ -34,9 +34,9 @@ void PID::UpdateError(double cte) {
    * TODO: Update PID errors based on cte.
    **/
    if(abs(delta_time) < 0.000001) return;
-   double P = Kpi * cte;
-   I += Kii * cte * delta_time;
-   double D = Kdi * (cte - cte0) / delta_time;
+   double P = Kp * cte;
+   I += Ki * cte * delta_time;
+   double D = Kd * (cte - cte0) / delta_time;
    action = P + I + D;
    cte0 = cte;
 }
@@ -47,8 +47,8 @@ double PID::TotalError() {
     * The code should return a value in the interval [output_lim_mini, output_lim_maxi]
    */
    double control = action;
-   if (action < output_lim_mini) control = output_lim_mini;
-   if (action > output_lim_maxi) control = output_lim_maxi;
+   if (action < output_lim_min) control = output_lim_min;
+   if (action > output_lim_max) control = output_lim_max;
    return control;
 }
 
