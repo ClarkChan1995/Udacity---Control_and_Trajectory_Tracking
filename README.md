@@ -74,10 +74,11 @@ pip3 install matplotlib
 Here with the screenshot of the result video. By following the youtube [link](), a short video/demo taken from the simulator can be viewed. Also, the data of two plots, Throttle plot and Steering Plot, are extracted from this demo.
 ![Alt Text](/project/pid_controller/screenshot/screenshot.txt)
 
-By using the command mentioned in [Evaluate the Efficiency](#evaluate-the-efficiency) section, the [steering plot]() and [throttle plot]() are generated.
+By using the command mentioned in [Evaluate the Efficiency](#evaluate-the-efficiency) section, the [steering plot](/project/pid_controller/screenshot/steering_plot.png) and [throttle plot](/project/pid_controller/screenshot/throttle_plot.png) are generated.
 
 **Steering Plot**
-![Steering Plot]()
+
+![Steering Plot](/project/pid_controller/screenshot/steering_plot.png)
 
 From the graph, there are two curves plotted which the blue curve shows the steering error and the orange curve shows the steering output. The steering error is the angle difference between the current steering and the desired steering suggested by the vectorial field. The vectorial field has two characteristics:
 - Suggests the steering to move in the direction between first to last waypoint. (Average calculated)
@@ -86,7 +87,8 @@ From the graph, there are two curves plotted which the blue curve shows the stee
 Due to PID controller's natural characteristics, it is noted that the steering error is proportional to the steering output, but the derivative term prevent the proportinal overshooting by the car, and therefore, some disturbances or ups-and-downs curve are showing in the curve. This kind of scene is showing when the waypoints left behind the car and the car reaches offset (spiral becomes zero). The largest disturbance is showing in the graph where the iteration is close to 100, that is when the car is going to turn right and the car is totally reaching offset. After some compensating and overshooting, the car is able to control back and move back to its direction.
 
 **Throttle Plot**
-![Throttle Plot]()
+
+![Throttle Plot](/project/pid_controller/screenshot/throttle_plot.png)
 
 From the graph, there are three curves plotted which the blue curve shows the throttle error, the green curve shows the throttle output and th orange curve shows the brake output. The throttle is the difference between current speed and the desired speed suggested by the vectorial field. 
 
@@ -96,7 +98,7 @@ Similar to the steering plot, throttle error is propotional to the throttle outp
 As mentioned in the Steering Plot and Throttle Plot from the previous [section](#add-the-plots-to-your-report-and-explain-them-describe-what-you-see), due to PID controller's natural characteristics, it is noted that the steering error is proportional to the steering output, but the derivative term prevent the proportinal overshooting by the car, and so goes to throttle error and throttle output. The integral term is a very small value which close to zero value when there is no crashing or drifting happened. It will levitate when there are some happening to the car. 
 
 ## How would you design a way to automatically tune the PID parameters?
-As in this project, all the parameters of the throttle and steering PID controller are tuned by try-and-error method. There are two problems that stopping the PID parameters from tuning automatically. The first problem maybe quite easier is to make a bash file to auto restarting the CARLA stimulator and returning the experiment to the starting point once the parameter has been tuned to find a best value. However, to solve the first problem, the second problem is needed to be solved first which is speeding the stimulator and the environment (crashing problem). On selecting the best PID parameter, obviously it is finding the smallest root-mean-square deviation(RMSE) of the parameters. In order to tune to find the best parameter, a feedback is needed from the output of the PID controller. However, PID controller itself is a open-loop system which means it is a one-way input-output controller and it does not return a feedback to the system. Therefore, by adding feedback and behaviour from the current output to the parameter selection, it may tune automatically to find the best parameter and stop the process of tuning. 
+As in this project, all the parameters of the throttle and steering PID controller are tuned by try-and-error method. There are two problems that stopping the PID parameters from tuning automatically. The first problem maybe quite easier is to make a bash file to auto restarting the CARLA stimulator and returning the experiment to the starting point once the parameter has been tuned to find a best value. However, to solve the first problem, the second problem is needed to be solved first which is speeding the stimulator and the environment (crashing problem). On selecting the best PID parameter, obviously it is finding the smallest root-mean-square deviation(RMSE) of the parameters. In order to tune to find the best parameter, a feedback is needed from the output of the PID controller. However, PID controller used in this project is a open-loop system (perhaps it is a meta version) which means it is a one-way input-output controller and it does not return a feedback to the system. Therefore, by adding feedback and behaviour from the current output to the parameter selection, it may tune automatically to find the best parameter and stop the process of tuning. 
 
 ## PID controller is a model free controller, i.e. it does not use a model of the car. Could you explain the pros and cons of this type of controller?
 **Pros**
@@ -108,72 +110,13 @@ As in this project, all the parameters of the throttle and steering PID controll
 2. PID controller is needed to be tuned until getting the best result. (Wasting a lot of time)
 
 ## What would you do to improve the PID controller?
+At first in this project, the original PID controller is used to carry out in the simulator. However, the parameters are very hard to tune to meet the requirements or satisfication. Therefore, two ways of PID controller is used to calculate the throttle error and steering error by two different vectorial fields. Instead of directly calculating the error by using the beginning and the final waypoints to to get the desired speed and angle, an average of waypoints is calculated and used to calculate the desired speed and angle for a short distance. This is to get the control of speed and angle easily to avoid drifting or overturning due to some circumstances such as turning right/left and after avoiding obstacles. Although this can be avoided by adjusting the threshold of steering, but the errors calculated with just one PID are not enough to avoid such problems occuring with keep tuning the parameters. 
 
+# Bugs/Future Improvement
+During project, the stimulation is too slow and keep crashing. This may bring a lot of annoying and dissatisfying while studying or tuning the parameters to get the satisfying result. As mentioned before, if the stimulation can be improved to become faster(with high FPS and fast calculation), the parameter tuning process can be automatically done, but not with try-and-error method. Besides, there is no map or final destination for the stimulation running. Although the stimulator can keep going and running as usual (if there is no crashing), but there is no ending point (perhaps that is the project's requirement, but it doesn't mention). Besides, the tuned parameters cannot get the same result as always because the desired speed and angle calculated everytime is different even though the obstacles and the environment are same. Therefore, if the calculated desired speed and angle can be stored and used to calculate the current values by minimizing the difference of the values, perhaps the parameter tuning process could be faster and the results are not so big different at every time.
 
-## Project Instructions
+Due to the limitation of time and basic learning of PID controller, the project is using the simple PID to control the speed and steering angle of the car in the stimulator. This PID is not so suitable to be used in the vehicle to control such important aspects. As mentioned before, this PID controller is an open-loop system which it is not suitable to be used if applying on the autonomous drving system becauses a closed-loop system can provide the feedback from outcome in order to improve its accuracy, but an open-loop system cannot. Perhaps in the future, there is a closed-loop PID controller being introduced by Udacity.
 
-In the previous project you built a path planner for the autonomous vehicle. Now you will build the steer and throttle controller so that the car follows the trajectory.
-
-You will design and run the a PID controller as described in the previous course.
-
-In the directory [/pid_controller](https://github.com/udacity/nd013-c6-control-starter/tree/master/project/pid_controller)  you will find the files [pid_controller.cpp](https://github.com/udacity/nd013-c6-control-starter/blob/master/project/pid_controller/pid_controller.cpp)  and [pid_controller.h](https://github.com/udacity/nd013-c6-control-starter/blob/master/project/pid_controller/pid_controller.h). This is where you will code your pid controller.
-The function pid is called in [main.cpp](https://github.com/udacity/nd013-c6-control-starter/blob/master/project/pid_controller/main.cpp).
-
-### Step 1: Build the PID controller object
-Complete the TODO in the [pid_controller.h](https://github.com/udacity/nd013-c6-control-starter/blob/master/project/pid_controller/pid_controller.h) and [pid_controller.cpp](https://github.com/udacity/nd013-c6-control-starter/blob/master/project/pid_controller/pid_controller.cpp).
-
-Run the simulator and see in the desktop mode the car in the CARLA simulator. Take a screenshot and add it to your report. The car should not move in the simulation.
-### Step 2: PID controller for throttle:
-1) In [main.cpp](https://github.com/udacity/nd013-c6-control-starter/blob/master/project/pid_controller/main.cpp), complete the TODO (step 2) to compute the error for the throttle pid. The error is the speed difference between the actual speed and the desired speed.
-
-Useful variables:
-- The last point of **v_points** vector contains the velocity computed by the path planner.
-- **velocity** contains the actual velocity.
-- The output of the controller should be inside [-1, 1].
-
-2) Comment your code to explain why did you computed the error this way.
-
-3) Tune the parameters of the pid until you get satisfying results (a perfect trajectory is not expected).
-
-### Step 3: PID controller for steer:
-1) In [main.cpp](https://github.com/udacity/nd013-c6-control-starter/blob/master/project/pid_controller/main.cpp), complete the TODO (step 3) to compute the error for the steer pid. The error is the angle difference between the actual steer and the desired steer to reach the planned position.
-
-Useful variables:
-- The variable **y_points** and **x_point** gives the desired trajectory planned by the path_planner.
-- **yaw** gives the actual rotational angle of the car.
-- The output of the controller should be inside [-1.2, 1.2].
-- If needed, the position of the car is stored in the variables **x_position**, **y_position** and **z_position**
-
-2) Comment your code to explain why did you computed the error this way.
-
-3) Tune the parameters of the pid until you get satisfying results (a perfect trajectory is not expected).
-
-### Step 4: Evaluate the PID efficiency
-The values of the error and the pid command are saved in thottle_data.txt and steer_data.txt.
-Plot the saved values using the command (in nd013-c6-control-refresh/project):
-
-```
-python3 plot_pid.py
-```
-
-You might need to install a few additional python modules: 
-
-```
-pip3 install pandas
-pip3 install matplotlib
-```
-
-Answer the following questions:
-- Add the plots to your report and explain them (describe what you see)
-- What is the effect of the PID according to the plots, how each part of the PID affects the control command?
-- How would you design a way to automatically tune the PID parameters?
-- PID controller is a model free controller, i.e. it does not use a model of the car. Could you explain the pros and cons of this type of controller?
-- (Optional) What would you do to improve the PID controller?
-
-
-### Tips:
-
-- When you wil be testing your c++ code, restart the Carla simulator to remove the former car from the simulation.
-- If the simulation freezes on the desktop mode but is still running on the terminal, close the desktop and restart it.
-- When you will be tuning the PID parameters, try between those values:
+# Conclusion
+Through this project, a simple PID controller is learnt to calculate the throttle error and steering error in order to control the movement of the vehicle where the braking, speeding and steering turning. The parameters of the PID are needed to be tuned to get the satisfying result. However, due to some issues persisting, there are some improvement that needed to be fixed in the future. 
 
