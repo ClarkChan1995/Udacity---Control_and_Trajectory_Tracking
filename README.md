@@ -71,8 +71,8 @@ pip3 install matplotlib
 
 # Result(Questions Answering is Included)
 ## Add the plots to your report and explain them (describe what you see)
-Here with the screenshot of the result video. By following the youtube [link](), a short video/demo taken from the simulator can be viewed. Also, the data of two plots, Throttle plot and Steering Plot, are extracted from this demo.
-![Alt Text](/project/pid_controller/screenshot/screenshot.txt)
+Here with the screenshot of the result video. By following the youtube [link](https://youtu.be/6HB9ypODutg), a short video/demo taken from the simulator can be viewed. Also, the data of two plots, Throttle plot and Steering Plot, are extracted from this demo.
+![Alt Text](/project/pid_controller/screenshot/start_screen.png)
 
 By using the command mentioned in [Evaluate the Efficiency](#evaluate-the-efficiency) section, the [steering plot](/project/pid_controller/screenshot/steering_plot.png) and [throttle plot](/project/pid_controller/screenshot/throttle_plot.png) are generated.
 
