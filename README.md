@@ -72,13 +72,13 @@ pip3 install matplotlib
 # Result(Questions Answering is Included)
 ## Add the plots to your report and explain them (describe what you see)
 Here with the screenshot of the result video. By following the youtube [link](https://youtu.be/6HB9ypODutg), a short video/demo taken from the simulator can be viewed. Also, the data of two plots, Throttle plot and Steering Plot, are extracted from this demo.
-![Alt Text](/project/pid_controller/screenshot/start_screen.png)
+![Alt Text](/project/code_submit/screenshot/start_screen.png)
 
-By using the command mentioned in [Evaluate the Efficiency](#evaluate-the-efficiency) section, the [steering plot](/project/pid_controller/screenshot/steering_plot.png) and [throttle plot](/project/pid_controller/screenshot/throttle_plot.png) are generated.
+By using the command mentioned in [Evaluate the Efficiency](#evaluate-the-efficiency) section, the [steering plot](/project/code_submit/screenshot/steering_plot.png) and [throttle plot](/project/code_submit/screenshot/throttle_plot.png) are generated.
 
 **Steering Plot**
 
-![Steering Plot](/project/pid_controller/screenshot/steering_plot.png)
+![Steering Plot](/project/code_submit/screenshot/steering_plot.png)
 
 From the graph, there are two curves plotted which the blue curve shows the steering error and the orange curve shows the steering output. The steering error is the angle difference between the current steering and the desired steering suggested by the vectorial field. The vectorial field has two characteristics:
 - Suggests the steering to move in the direction between first to last waypoint. (Average calculated)
@@ -88,7 +88,7 @@ Due to PID controller's natural characteristics, it is noted that the steering e
 
 **Throttle Plot**
 
-![Throttle Plot](/project/pid_controller/screenshot/throttle_plot.png)
+![Throttle Plot](/project/code_submit/screenshot/throttle_plot.png)
 
 From the graph, there are three curves plotted which the blue curve shows the throttle error, the green curve shows the throttle output and th orange curve shows the brake output. The throttle is the difference between current speed and the desired speed suggested by the vectorial field. 
 
